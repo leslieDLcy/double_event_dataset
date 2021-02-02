@@ -503,19 +503,9 @@ def main(segment, config):
          https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html#io-hdf5
     """
     # get destdirname as NET.STA.LOC.CHA string:
-    destdirname = segment.data_seed_id
-    if not destdirname:  # should not be null (see config), but for safety:
+    seg_seed_id = segment.data_seed_id
+    if not seg_seed_id:  # should not be null (see config), but for safety:
         raise ValueError("data_seed_id is null")
-
-    # preprocess (currently, detrend)
-    try:
-        processed_trace = preprocess(segment, config)
-    except Exception as error:
-        raise ValueError("Error in 'bandpass_remresp': %s" % str(error))
-
-    # let's be paranoid:
-    if segment.stream()[0].get_id() != destdirname:
-        raise ValueError('miniSEED id != database seed_id')
 
     root = config['destdir']
 
@@ -525,11 +515,7 @@ def main(segment, config):
     class_label = classes[0].label
 
     # ok, build destdir as root + destdirname:
-    destdir = os.path.join(root, class_label, destdirname)
-    # make dir if it doesn't exist:
-    if not os.path.exists(destdir):
-        os.makedirs(destdir)
-
+    destdir = os.path.join(root, class_label, seg_seed_id)
     # build name from event (dirty way):
     evt = segment.event
     fname = "mag=%.2f;magt=%s;lat=%.5f;lon=%.5f;depth=%f;time=%s;id=%d" % \
@@ -537,7 +523,44 @@ def main(segment, config):
              evt.depth_km, evt.time.isoformat(sep='T'), evt.id)
     # save trace:
     destpath = os.path.join(destdir, fname + '.mseed')
-    processed_trace.write(destpath, format='MSEED')
+
+    if not os.path.isfile(destpath):
+        # preprocess (currently, detrend)
+        try:
+            processed_trace = preprocess(segment, config)
+        except Exception as error:
+            raise ValueError("Error in 'bandpass_remresp': %s" % str(error))
+
+        # before saving, let's be paranoid:
+        if segment.stream()[0].get_id() != seg_seed_id:
+            raise ValueError('miniSEED id != database seed_id')
+
+        # make dir if it doesn't exist:
+        if not os.path.exists(destdir):
+            os.makedirs(destdir)
+
+        processed_trace.write(destpath, format='MSEED')
+
+    # write URLs in CSV format (first column will be segment id, then URL, then class):
+    netstaloccha = seg_seed_id.split('.')
+    url = segment.datacenter.dataselect_url
+    url += '?net=%s' % netstaloccha[0]
+    url += '&sta=%s' % netstaloccha[1]
+    url += '&loc=%s' % netstaloccha[2]
+    url += '&cha=%s' % netstaloccha[3]
+    url += '&starttime=%s' % segment.request_start.isoformat(sep='T')
+    url += '&endtime=%s' % segment.request_end.isoformat(sep='T')
+
+    return {
+        'url': url,
+        'class': class_label,
+        'evt_mag': evt.magnitude,
+        'evt_magtype': evt.mag_type,
+        'evt_lat': evt.latitude,
+        'evt_lon': evt.longitude,
+        'evt_depth_km': evt.depth_km,
+        'evt_time': evt.time.isoformat(sep='T'),
+    }
 
     # stream_path = segment.sds_path(config['root_dir'])
     # basedir = os.path.dirname(stream_path)
