@@ -1,0 +1,5 @@
+Copy this file in the same directory with name "dburl.txt"
+(which is gitignored because it contains sensitive information)
+remove all text and add a *single* line with the database address. The format is:
+
+postgresql://<user>:<password>@<server>/<db_name>
