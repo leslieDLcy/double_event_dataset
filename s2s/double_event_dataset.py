@@ -524,22 +524,22 @@ def main(segment, config):
     # save trace:
     destpath = os.path.join(destdir, fname + '.mseed')
 
-    if not os.path.isfile(destpath):
-        # preprocess (currently, detrend)
-        try:
-            processed_trace = preprocess(segment, config)
-        except Exception as error:
-            raise ValueError("Error in 'bandpass_remresp': %s" % str(error))
-
-        # before saving, let's be paranoid:
-        if segment.stream()[0].get_id() != seg_seed_id:
-            raise ValueError('miniSEED id != database seed_id')
-
-        # make dir if it doesn't exist:
-        if not os.path.exists(destdir):
-            os.makedirs(destdir)
-
-        processed_trace.write(destpath, format='MSEED')
+    # if not os.path.isfile(destpath):
+    #     # preprocess (currently, detrend)
+    #     try:
+    #         processed_trace = preprocess(segment, config)
+    #     except Exception as error:
+    #         raise ValueError("Error in 'bandpass_remresp': %s" % str(error))
+    #
+    #     # before saving, let's be paranoid:
+    #     if segment.stream()[0].get_id() != seg_seed_id:
+    #         raise ValueError('miniSEED id != database seed_id')
+    #
+    #     # make dir if it doesn't exist:
+    #     if not os.path.exists(destdir):
+    #         os.makedirs(destdir)
+    #
+    #     processed_trace.write(destpath, format='MSEED')
 
     # write URLs in CSV format (first column will be segment id, then URL, then class):
     netstaloccha = seg_seed_id.split('.')
@@ -551,16 +551,18 @@ def main(segment, config):
     url += '&starttime=%s' % segment.request_start.isoformat(sep='T')
     url += '&endtime=%s' % segment.request_end.isoformat(sep='T')
 
-    return {
+    ret = {
         'url': url,
         'class': class_label,
-        'evt_mag': evt.magnitude,
-        'evt_magtype': evt.mag_type,
-        'evt_lat': evt.latitude,
-        'evt_lon': evt.longitude,
-        'evt_depth_km': evt.depth_km,
-        'evt_time': evt.time.isoformat(sep='T'),
+        'mag': evt.magnitude,
+        'magtype': evt.mag_type,
+        'lat': evt.latitude,
+        'lon': evt.longitude,
+        'depth_km': evt.depth_km,
+        'time': evt.time.isoformat(sep='T'),
     }
+
+    return ret
 
     # stream_path = segment.sds_path(config['root_dir'])
     # basedir = os.path.dirname(stream_path)
