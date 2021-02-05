@@ -244,7 +244,7 @@ amp_ratio_threshold: 0.8
 # Advanced settings tuning the process routine:
 advanced_settings:
   # Use parallel sub-processes to speed up the execution.
-  multi_process: false
+  multi_process: true
   # The number of sub-processes. If null, it is set as the the number of CPUs in the
   # system. This option is ignored if multi_process is false
   num_processes: null

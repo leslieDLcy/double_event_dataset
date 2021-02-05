@@ -407,6 +407,7 @@ import os
 # Useful e.g. in  "main" if we want to control the *order* of the columns in the output csv
 from collections import OrderedDict
 from datetime import datetime, timedelta  # always useful
+from enum import Enum
 from math import factorial  # for savitzky_golay function
 
 # import numpy for efficient computation:
@@ -507,22 +508,50 @@ def main(segment, config):
     if not seg_seed_id:  # should not be null (see config), but for safety:
         raise ValueError("data_seed_id is null")
 
-    root = config['destdir']
-
+    # get class label, check that there is only one, and proceed:
     classes = segment.classes
     if len(classes) > 1:
         raise ValueError("%d classes found. Only one required" % len(classes))
     class_label = classes[0].label
 
-    # ok, build destdir as root + destdirname:
-    destdir = os.path.join(root, class_label, seg_seed_id)
-    # build name from event (dirty way):
+    # write URLs in CSV format (first column will be segment id, then URL, then class):
+    nslc = seg_seed_id.split('.')
+    url = segment.datacenter.dataselect_url
+    url += '?net=%s' % nslc[0]
+    url += '&sta=%s' % nslc[1]
+    url += '&loc=%s' % nslc[2]
+    url += '&cha=%s' % nslc[3]
+    url += '&starttime=%s' % segment.request_start.isoformat(sep='T')
+    url += '&endtime=%s' % segment.request_end.isoformat(sep='T')
+
     evt = segment.event
-    fname = "mag=%.2f;magt=%s;lat=%.5f;lon=%.5f;depth=%f;time=%s;id=%d" % \
-            (evt.magnitude, str(evt.mag_type), evt.latitude, evt.longitude,
-             evt.depth_km, evt.time.isoformat(sep='T'), evt.id)
-    # save trace:
-    destpath = os.path.join(destdir, fname + '.mseed')
+
+    return {
+        'url': url,
+        'classlabel': class_label,
+        'mag': evt.magnitude,
+        'magtype': evt.mag_type,
+        'lat': evt.latitude,
+        'lon': evt.longitude,
+        'depth_km': evt.depth_km,
+        'time': evt.time.isoformat(sep='T'),
+        'dist_deg': segment.event_distance_deg,
+    }
+
+
+## UNUSED STUFF:
+
+    # ok, build destdir as root + destdirname:
+    # root = config['destdir']
+    # destdir = os.path.join(root, class_label, seg_seed_id)
+    # build name from event (dirty way):
+
+
+    # fname = "mag=%.2f;magt=%s;lat=%.5f;lon=%.5f;depth=%f;time=%s;id=%d" % \
+    #         (evt.magnitude, str(evt.mag_type), evt.latitude, evt.longitude,
+    #          evt.depth_km, evt.time.isoformat(sep='T'), evt.id)
+    # # save trace:
+    # destpath = os.path.join(destdir, fname + '.mseed')
 
     # if not os.path.isfile(destpath):
     #     # preprocess (currently, detrend)
@@ -540,29 +569,6 @@ def main(segment, config):
     #         os.makedirs(destdir)
     #
     #     processed_trace.write(destpath, format='MSEED')
-
-    # write URLs in CSV format (first column will be segment id, then URL, then class):
-    netstaloccha = seg_seed_id.split('.')
-    url = segment.datacenter.dataselect_url
-    url += '?net=%s' % netstaloccha[0]
-    url += '&sta=%s' % netstaloccha[1]
-    url += '&loc=%s' % netstaloccha[2]
-    url += '&cha=%s' % netstaloccha[3]
-    url += '&starttime=%s' % segment.request_start.isoformat(sep='T')
-    url += '&endtime=%s' % segment.request_end.isoformat(sep='T')
-
-    ret = {
-        'url': url,
-        'class': class_label,
-        'mag': evt.magnitude,
-        'magtype': evt.mag_type,
-        'lat': evt.latitude,
-        'lon': evt.longitude,
-        'depth_km': evt.depth_km,
-        'time': evt.time.isoformat(sep='T'),
-    }
-
-    return ret
 
     # stream_path = segment.sds_path(config['root_dir'])
     # basedir = os.path.dirname(stream_path)
@@ -620,3 +626,4 @@ def mag2freq(magnitude):
     else:
         freq_min = 0.05
     return freq_min
+
