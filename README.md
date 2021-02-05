@@ -35,25 +35,23 @@ cache_dir = None  # None: no cache (always download waveforms)
 classlabel = 'urb_single'
 
 for channel_data in get_events(cache_dir, classlabel=classlabel):
-    # this is your channel_data object, a collection
-    # of labelled ObsPy traces of a given channel.
+    # This is your channel_data object, a collection
+    # of recorded Waveforms from given channel, and
+    # annotated with a class label.
 
     # Few preliminary information:
     # ============================
 
-    # 1. the channel_data id is the channel identifier in the usual form
+    # 1. Get the channel_data id is the channel identifier in the usual form
     # "<netowrk_code>.<station_code>.<location_code>.<channel_code>":
     channel_id = channel_data.id  # e.g. 3A.MZ01..EHE
-
-    # 2. You can access all channel waveforms (ObsPy Trace objects) and 
-    # their metadata (pandas Series, dict-like objects)
     
-    # 2a. the total number of traces:
+    # 2. Get the total number of wavefomrs (ObsPy Traces objects) in the given channel:
     ntraces = channel_data.numtraces
 
-    # 2b. Let's access all traces to apply now a preprocess, such as a
-    # detrend (necessary below for the creation of artificial double event by merging 
-    # two waveform events later).
+    # 3. Access of all channel waveforms (ObsPy Traces). For instance, you might
+    # want to apply a preprocess such e.g. a detrend (necessary below for the creation 
+    # of artificial double event by merging two waveform events later).
     for trace in channel_data.traces:
         trace.detrend(type='linear')
     # WARNING: Accessing `channel-data.traces` from now on will return the traces
@@ -61,8 +59,7 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
     # the Trace data, use with care! (if you do not want to do this,
     # you can preprocess a copy of each Trace, see below):
     
-    # 2c. Let's inspect the trace metadata, which has also some information
-    # about the event/earthquake:
+    # 3. Access and inspect all traces metadata (pandas Series, or dict-like object):
     for metadata in channel_data.metadata:
         # Relevant keys/attributes are:
         # Attribute                                                  Value
@@ -86,12 +83,16 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         event_lat, event_lon = metadata['lat'], metadata['lon']
         dist_deg = metadata.dist_deg  # event to station distance (in degrees)
         event_depth = metadata['depth_km']
+    
+    # You can also get each trace coupled with its metadata in loops, e.g.:
+    # for trace, metadata in zip(channel_data.traces, channel_data.metadata):
+    #   ... execute your code here ...
 
     # Multi event creation:
     # =====================
 
     # Multi event creation can be easily performed with a shortcut method
-    # that yields all combination of traces pairs from the same channel:
+    # that yields all traces pairs (2-combinations of traces) from the same channel:
     for (trace1, metadata1), (trace2, metadata2) in channel_data.pairs:
 
         # If you did not pass 'urb_single' to the `classlabel` argument
