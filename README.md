@@ -18,7 +18,7 @@ processed inplace. This program stores the URL of labelled waveforms and let
 the user manipulate them.
 
 Here a snippet of the functions to use in your code
-(you Python project, IPython in the terminal, Notebook and so on)
+(your Python project, IPython in the terminal, Notebook and so on)
 
 ```python
 import numpy as np
