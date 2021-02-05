@@ -12,9 +12,10 @@ python createurls.py
 
 ## Usage
 
-The generation of all waveforms is in the order of
-Gigabytes. Therefore, data must be downloaded and
-processed inplace.
+Tha data size (skipping the generation of all artificial double events)
+is in the order of Gigabytes. Therefore, data must be downloaded and
+processed inplace. This program stores the URL of labelled waveforms and let
+the user manipulate them.
 
 Here a snippet of the functions to use in your code
 (you Python project, IPython in the terminal, Notebook and so on)
@@ -25,39 +26,41 @@ from obspy import Trace
 from double_event_dataset.utils import get_events
 
 # Setup a cache directory. Use this if you want all waveforms to be
-# saved also on your filesystem and/or make the `get_events` method
+# saved also on your computer and/or make the `get_events` method
 # below run faster next time (providing the same cache dir will load from
 # disk instead than from the web)
 cache_dir = None  # None: no cache (always download waveforms)
-# Provide a class label to filter only specific waveforms.
+# Provide a class label to work only on specific waveforms.
 # None means: all labels
 classlabel = 'urb_single'
 
 for channel_data in get_events(cache_dir, classlabel=classlabel):
     # this is your channel_data object, a collection
-    # of ObsPy traces in a given channel. Here you can compose
-    # you "multiple events" by combining those traces.
+    # of labelled ObsPy traces of a given channel.
 
     # Few preliminary information:
 
     # 1. the channel_data id is the channel identifier
-    # in the usual form:
+    # in the usual form
     # "<netowrk_code>.<station_code>.<location_code>.<channel_code>":
     channel_data.id  # e.g. 3A.MZ01..EHE
 
-    # 2. You can access all traces (ObsPy trace object representing a
-    # waveform) and all metadata (pandas Series, dict-like objects
-    # with each Trace information, especially related to its
-    # source earthquake):
-    # 2a. E.g., access all traces to apply now a preprocess, such as a
-    # detrend (necessary for the combination of multiple event slater).
-    # NOTE: this is faster but - as a lot of Traces method of ObsPy -
-    # will permanently modify all traces! (see another option below):
+    # 2. You can access all channel traces (ObsPy trace object representing a
+    # waveform) and their metadata (pandas Series, dict-like objects) which includes
+    # earthquake information.
+
+    # 2a. E.g., Let's access all traces to apply now a preprocess, such as a
+    # detrend (necessary below for the creation of artifical double event by merging 
+    # two waveform events later).
     for trace in channel_data.traces:
         trace.detrend(type='linear')
-    # accessing channel-data.traces now returns the traces
-    # detrend(ed)
-    # 2b. Access their metadata:
+    # WARNING: Accessing `channel-data.traces` from now on will returns the traces
+    # detrend(ed)!! As many ObsPy methods, `detrend` above permanently modifies 
+    # the Trace data, use with care! (if you do not want to do this,
+    # you can preprocess a copy of each Trace, see below):
+    
+    # 2b. Let's inspect the trace metadata, which has also some information
+    # about the earthquake:
     for metadata in channel_data.metadata:
         # Relevant keys/attributes are:
         # Attribute                                                  Value
@@ -74,7 +77,8 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # starttime                                    2016-10-11 07:31:55
         # endtime                                      2016-10-11 07:35:55
         #
-        # You can access those element as dict or object, e.g.
+
+        # Example:
         event_time = metadata['time']  # Timestamp (datetime) object
         event_time = metadata.time  # same as above
         event_mag = metadata.mag
@@ -100,8 +104,8 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         if trace1.stats.delta != trace2.stats.delta:
             continue
 
-        # If the traces are still "raw" (e.g., you did noit perform
-        # any detrend inplace on all traces, see above), you might want
+        # If the traces are still "raw" (e.g., you did not perform
+        # any detrend on all traces, see above), you might want
         # to apply some processing here, but do it on a copy so that
         # you do not permanently modify the traces. E.g.:
         trace1 = trace1.copy().detrend(type='linear')
