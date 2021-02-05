@@ -39,28 +39,30 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
     # of labelled ObsPy traces of a given channel.
 
     # Few preliminary information:
+    # ============================
 
-    # 1. the channel_data id is the channel identifier
-    # in the usual form
+    # 1. the channel_data id is the channel identifier in the usual form
     # "<netowrk_code>.<station_code>.<location_code>.<channel_code>":
-    channel_data.id  # e.g. 3A.MZ01..EHE
+    channel_id = channel_data.id  # e.g. 3A.MZ01..EHE
 
-    # 2. You can access all channel traces (ObsPy trace object representing a
-    # waveform) and their metadata (pandas Series, dict-like objects) which includes
-    # earthquake information.
+    # 2. You can access all channel waveforms (ObsPy Trace objects) and 
+    # their metadata (pandas Series, dict-like objects)
+    
+    # 2a. the total number of traces:
+    ntraces = channel_data.numtraces
 
-    # 2a. E.g., Let's access all traces to apply now a preprocess, such as a
-    # detrend (necessary below for the creation of artifical double event by merging 
+    # 2b. Let's access all traces to apply now a preprocess, such as a
+    # detrend (necessary below for the creation of artificial double event by merging 
     # two waveform events later).
     for trace in channel_data.traces:
         trace.detrend(type='linear')
-    # WARNING: Accessing `channel-data.traces` from now on will returns the traces
+    # WARNING: Accessing `channel-data.traces` from now on will return the traces
     # detrend(ed)!! As many ObsPy methods, `detrend` above permanently modifies 
     # the Trace data, use with care! (if you do not want to do this,
     # you can preprocess a copy of each Trace, see below):
     
-    # 2b. Let's inspect the trace metadata, which has also some information
-    # about the earthquake:
+    # 2c. Let's inspect the trace metadata, which has also some information
+    # about the event/earthquake:
     for metadata in channel_data.metadata:
         # Relevant keys/attributes are:
         # Attribute                                                  Value
@@ -76,19 +78,20 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # dist_deg                                                0.185072
         # starttime                                    2016-10-11 07:31:55
         # endtime                                      2016-10-11 07:35:55
-        #
 
         # Example:
-        event_time = metadata['time']  # Timestamp (datetime) object
+        event_time = metadata['time']  # event time, Timestamp (datetime) object
         event_time = metadata.time  # same as above
         event_mag = metadata.mag
         event_lat, event_lon = metadata['lat'], metadata['lon']
+        dist_deg = metadata.dist_deg  # event to station distance (in degrees)
+        event_depth = metadata['depth_km']
 
     # Multi event creation:
+    # =====================
 
-    # Multi event creation is up to the user but we created
-    # a shortcut method that yields traces pairs with
-    # their metadata. So:
+    # Multi event creation can be easily performed with a shortcut method
+    # that yields all combination of traces pairs from the same channel:
     for (trace1, metadata1), (trace2, metadata2) in channel_data.pairs:
 
         # If you did not pass 'urb_single' to the `classlabel` argument
@@ -117,11 +120,13 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # take the trace with more points:
         maxtrace, mintrace = (trace1, trace2) if len(trace1) >= len(trace2) \
             else (trace2, trace1)
-        # take NUM_MULTIEVENT random points from max_trace:
+        # take NUM_MULTIEVENT random point indices from max_trace:
         pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT, p=None)
         # p above is a probability distribution with length=len(max_t).
-        # None means: use linear distribution.
-        # Change as you like (see numpy doc in case)
+        # None means: use linear distribution. Change as you like 
+        # (see numpy doc in case)
+        
+        # create multi event traces:
         multievent_traces = []
         for pt_ in pts:
             # now overlap mintrace over maxtrace, starting at index `pt_`
@@ -133,14 +138,17 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
             # create new ObsPy Trace
             # first update the stats (Trace metadata)
             new_metadata = maxtrace.stats.copy()
-            new_metadata.npts = new_data_len  # update stats and pass them:
+            new_metadata.npts = new_data_len 
+            # now create the Trace:
             new_trace = Trace(new_data, header=new_metadata)
             # append Trace:
             multievent_traces.append(new_trace)
-            # or create your data (e.g. spectrogram),
-            # or gain, save to file, maybe using event information from
-            # 'metadata'. E.g., a quik unique value might be using the
-            # _segment_id (database ID):
+            # Now it's up to the user: you can continue the processing
+            # and save the result and/or save the newly created Trace
+            # now. A good unique file name could be created by merging
+            # the two source segment ids. These ids refer to the source
+            # database and serve the purpose of providing unique identifiers 
+            # for all waveforms:
             filename = "%d-%d.mseed" % (metadata1._segment_db_id,
                                         metadata2._segment_db_id)
             # and then save it wherever you want ...
