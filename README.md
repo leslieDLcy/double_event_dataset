@@ -15,9 +15,9 @@ python createurls.py
 Tha data size is in the order of Gigabytes (not even considering the 
 generation of all artificial double events). Therefore, data must be downloaded 
 and processed inplace. This program stores internally only the URL of labelled 
-waveforms and let the user download and manipulate them on the local computer,
-providing few utility functions (see snippet below), that you can use in
-your code (e.g., Python project, IPython in the terminal, Notebook)
+waveforms and let the user download and manipulate them by means of the code
+snippet below, that can be copied and modified in any custom code (e.g., Python 
+project, IPython, Notebook)
 
 ```python
 import numpy as np
