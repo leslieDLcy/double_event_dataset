@@ -84,9 +84,10 @@ def get_events(root_dir=None, classlabel=None, verbose=False):
         this function (with the same same `root_dir` argument) will be faster,
         because the miniSEED will be loaded from disk when found, instead that
         from URLs
-    :param classlabel: a string denoting a classlabel to match (e.g. 'urb_multi',
-        or 'urb_single') or a list of classlabel strings (=match any of the
-        given labels). None (the default) means: return all events
+    :param classlabel: a string denoting a class label to match (e.g.
+        'urb_multi', or 'urb_single', see :func:`class_labels`) or a list of
+        class label strings (=match any of the given labels).
+        None (the default) means: return all events
     :param verbose: if additional output has to be printed to the standard
         output
     """
