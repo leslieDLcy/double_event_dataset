@@ -132,26 +132,26 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
         # Create multi event traces:
         multievent_traces = []
         for pt_ in pts:
-            # now overlap mintrace over maxtrace, starting at index `pt_`
-            # (maxtrace[pt_:])
+            # Merge traces arrays, overlapping mintrace on maxtrace
+            # from index `pt_`
             new_data_len = max([len(maxtrace), pt_ + len(mintrace)])
             new_data = np.zeros(new_data_len, dtype=float)
             new_data[:len(maxtrace)] = maxtrace.data
             new_data[pt_: pt_ + len(mintrace)] += mintrace.data
-            # create new ObsPy Trace
-            # first update the stats (Trace metadata)
+            # Create a new ObsPy Trace from the merged array
+            # First update the stats (Trace metadata)
             new_metadata = maxtrace.stats.copy()
             new_metadata.npts = new_data_len
-            # now create the Trace:
+            # Then create the Trace:
             new_trace = Trace(new_data, header=new_metadata)
-            # append Trace:
+            # What to do now is up to the user. Here, we just
+            # add it to a list of newly created Traces:
             multievent_traces.append(new_trace)
-            # Now it's up to the user: you can continue the processing
-            # and save the result and/or save the newly created Trace
-            # now. A good unique file name could be created by merging
-            # the two source segment ids. These ids refer to the source
-            # database and serve the purpose of providing unique identifiers
-            # for all waveforms:
+            # but you might want to continue the processing, or
+            # save the Trace to disk. In case, a good unique file name 
+            # could be the union of the two source segment ids. These ids 
+            # refer to the source database and serve the purpose of 
+            # providing unique identifiers for all waveforms:
             filename = "%d-%d.mseed" % (metadata1._segment_db_id,
                                         metadata2._segment_db_id)
             # and then save it wherever you want ...
