@@ -52,7 +52,7 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
     # channel:
     ntraces = channel_data.numtraces
 
-    # 3. Access of all channel waveforms (ObsPy Traces). For instance, you might
+    # 3. Access all channel waveforms (ObsPy Traces). For instance, you might
     # want to apply a preprocess such e.g. a detrend (necessary below for the
     # creation of artificial double event by merging two waveform events later).
     for trace in channel_data.traces:
