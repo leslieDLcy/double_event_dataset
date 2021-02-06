@@ -124,7 +124,7 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # take the trace with more points:
         maxtrace, mintrace = (trace1, trace2) if len(trace1) >= len(trace2) \
             else (trace2, trace1)
-        # take NUM_MULTIEVENT random point indices from max_trace:
+        # take NUM_MULTIEVENT_TRACES random point indices from max_trace:
         pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT_TRACES, p=None)
         # p above is a probability distribution with length=len(max_t).
         # None means: use linear distribution. Change as you like
