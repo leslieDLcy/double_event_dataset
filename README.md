@@ -27,13 +27,13 @@ from double_event_dataset.utils import get_channel_data, class_labels
 # Setup a cache directory. Use this if you want all waveforms to be
 # saved also on your computer and/or make the `for` loop below
 # run faster next time (providing the same cache dir will load from
-# disk instead than downloading from the web. Check to have few Gigabytes of 
-# free space on your computer)
+# disk instead than downloading from the web. You need to have few 
+# Gigabytes of free space on your computer for that)
 cache_dir = None  # None: no cache (always download waveforms)
 # Provide a class label to work only on specific waveforms.
 # None means: all labels.
 classlabel = 'urb_single'
-# To have  alist of all class labels, type:
+# To get the list of all class labels, type:
 classlabels = class_labels()  # = ['urb_multi', 'urb_nc', 'urb_single']
 
 for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
