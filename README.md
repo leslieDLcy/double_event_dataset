@@ -135,7 +135,7 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
             new_data_len = max([len(maxtrace), pt_ + len(mintrace)])
             new_data = np.zeros(new_data_len, dtype=float)
             new_data[:len(maxtrace)] = maxtrace.data
-            new_data[pt_: pt_ + len(mintrace)] = mintrace.data
+            new_data[pt_: pt_ + len(mintrace)] += mintrace.data
             # create new ObsPy Trace
             # first update the stats (Trace metadata)
             new_metadata = maxtrace.stats.copy()
