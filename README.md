@@ -81,7 +81,7 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
         # endtime                                      2016-10-11 07:35:55
 
         # Example:
-        event_time = metadata['time']  # event time, Timestamp/datetime) object
+        event_time = metadata['time']  # event time (Timestamp/datetime object)
         event_mag = metadata['mag']
         event_lat, event_lon = metadata['lat'], metadata['lon']
         dist_deg = metadata['dist_deg']  # event to station distance (in degrees)
@@ -95,7 +95,8 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
     # =====================
 
     # Multi event creation can be easily performed with a shortcut method that
-    # yields all traces pairs (2-combinations of traces) from the same channel:
+    # yields all traces pairs from the same channel (2-combinations of traces
+    # without replacement):
     for (trace1, metadata1), (trace2, metadata2) in channel_data.pairs:
 
         # If you did not pass 'urb_single' to the `classlabel` argument
@@ -105,9 +106,8 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
                 ('urb_single', 'urb_single'):
             continue
 
-        # traces from the same channel should have the same sampling
-        # rate. However, let's check, if they have different sampling
-        # rates, either interpolate, or let's keep it simple, skip:
+        # Traces from the same channel should have the same sampling
+        # rate, but let's check for safety and skip in case:
         if trace1.stats.delta != trace2.stats.delta:
             continue
 
@@ -118,19 +118,18 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
         trace1 = trace1.copy().detrend(type='linear')
         trace2 = trace2.copy().detrend(type='linear')
 
-        # Now you can start compose them
-        # define how many artificial multi event traces you want:
+        # Now we can start compose the two traces.
+        # Define how many artificial multi-event traces you want:
         NUM_MULTIEVENT_TRACES = 3
-        # take the trace with more points:
+        # Take the trace with more points:
         maxtrace, mintrace = (trace1, trace2) if len(trace1) >= len(trace2) \
             else (trace2, trace1)
-        # take NUM_MULTIEVENT_TRACES random point indices from max_trace:
+        # Take NUM_MULTIEVENT_TRACES random point indices from max_trace:
         pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT_TRACES, p=None)
-        # p above is a probability distribution with length=len(max_t).
-        # None means: use linear distribution. Change as you like
-        # (see numpy doc in case)
+        # p above is the probability distribution used. None means: use 
+        # linear distribution. Change as you like (see numpy doc in case)
 
-        # create multi event traces:
+        # Create multi event traces:
         multievent_traces = []
         for pt_ in pts:
             # now overlap mintrace over maxtrace, starting at index `pt_`
