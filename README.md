@@ -25,9 +25,10 @@ from obspy import Trace
 from double_event_dataset.utils import get_channel_data, class_labels
 
 # Setup a cache directory. Use this if you want all waveforms to be
-# saved also on your computer and/or make the `get_events` method
-# below run faster next time (providing the same cache dir will load from
-# disk instead than from the web)
+# saved also on your computer and/or make the `for` loop below
+# run faster next time (providing the same cache dir will load from
+# disk instead than downloading from the web. Check to have few Gigabytes of 
+# free space on your computer)
 cache_dir = None  # None: no cache (always download waveforms)
 # Provide a class label to work only on specific waveforms.
 # None means: all labels.
