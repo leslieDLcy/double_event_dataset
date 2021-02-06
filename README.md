@@ -23,7 +23,7 @@ Here a snippet of the functions to use in your code
 ```python
 import numpy as np
 from obspy import Trace
-from double_event_dataset.utils import get_events
+from double_event_dataset.utils import get_events, class_labels
 
 # Setup a cache directory. Use this if you want all waveforms to be
 # saved also on your computer and/or make the `get_events` method
@@ -31,8 +31,10 @@ from double_event_dataset.utils import get_events
 # disk instead than from the web)
 cache_dir = None  # None: no cache (always download waveforms)
 # Provide a class label to work only on specific waveforms.
-# None means: all labels
+# None means: all labels.
 classlabel = 'urb_single'
+# To have  alist of all class labels, type:
+classlabels = class_labels()  # = ['urb_multi', 'urb_nc', 'urb_single']
 
 for channel_data in get_events(cache_dir, classlabel=classlabel):
     # This is your channel_data object, a collection
@@ -45,21 +47,23 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
     # 1. Get the channel_data id is the channel identifier in the usual form
     # "<netowrk_code>.<station_code>.<location_code>.<channel_code>":
     channel_id = channel_data.id  # e.g. 3A.MZ01..EHE
-    
-    # 2. Get the total number of wavefomrs (ObsPy Traces objects) in the given channel:
+
+    # 2. Get the total number of waveforms (ObsPy Traces objects) in the given
+    # channel:
     ntraces = channel_data.numtraces
 
     # 3. Access of all channel waveforms (ObsPy Traces). For instance, you might
-    # want to apply a preprocess such e.g. a detrend (necessary below for the creation 
-    # of artificial double event by merging two waveform events later).
+    # want to apply a preprocess such e.g. a detrend (necessary below for the
+    # creation of artificial double event by merging two waveform events later).
     for trace in channel_data.traces:
         trace.detrend(type='linear')
-    # WARNING: Accessing `channel-data.traces` from now on will return the traces
-    # detrend(ed)!! As many ObsPy methods, `detrend` above permanently modifies 
-    # the Trace data, use with care! (if you do not want to do this,
+    # WARNING: Accessing `channel-data.traces` from now on will return the
+    # traces detrend(ed)!! As many ObsPy methods, `detrend` above permanently
+    # modifies the Trace data, use with care! (if you do not want to do this,
     # you can preprocess a copy of each Trace, see below):
-    
-    # 3. Access and inspect all traces metadata (pandas Series, or dict-like object):
+
+    # 4. Access and inspect all traces metadata (pandas Series, or dict-like
+    # object):
     for metadata in channel_data.metadata:
         # Relevant keys/attributes are:
         # Attribute                                                  Value
@@ -77,13 +81,12 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # endtime                                      2016-10-11 07:35:55
 
         # Example:
-        event_time = metadata['time']  # event time, Timestamp (datetime) object
-        event_time = metadata.time  # same as above
-        event_mag = metadata.mag
+        event_time = metadata['time']  # event time, Timestamp/datetime) object
+        event_mag = metadata['mag']
         event_lat, event_lon = metadata['lat'], metadata['lon']
-        dist_deg = metadata.dist_deg  # event to station distance (in degrees)
+        dist_deg = metadata['dist_deg']  # event to station distance (in degrees)
         event_depth = metadata['depth_km']
-    
+
     # You can also get each trace coupled with its metadata in loops, e.g.:
     # for trace, metadata in zip(channel_data.traces, channel_data.metadata):
     #   ... execute your code here ...
@@ -91,8 +94,8 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
     # Multi event creation:
     # =====================
 
-    # Multi event creation can be easily performed with a shortcut method
-    # that yields all traces pairs (2-combinations of traces) from the same channel:
+    # Multi event creation can be easily performed with a shortcut method that
+    # yields all traces pairs (2-combinations of traces) from the same channel:
     for (trace1, metadata1), (trace2, metadata2) in channel_data.pairs:
 
         # If you did not pass 'urb_single' to the `classlabel` argument
@@ -124,9 +127,9 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
         # take NUM_MULTIEVENT random point indices from max_trace:
         pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT, p=None)
         # p above is a probability distribution with length=len(max_t).
-        # None means: use linear distribution. Change as you like 
+        # None means: use linear distribution. Change as you like
         # (see numpy doc in case)
-        
+
         # create multi event traces:
         multievent_traces = []
         for pt_ in pts:
@@ -139,7 +142,7 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
             # create new ObsPy Trace
             # first update the stats (Trace metadata)
             new_metadata = maxtrace.stats.copy()
-            new_metadata.npts = new_data_len 
+            new_metadata.npts = new_data_len
             # now create the Trace:
             new_trace = Trace(new_data, header=new_metadata)
             # append Trace:
@@ -148,7 +151,7 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
             # and save the result and/or save the newly created Trace
             # now. A good unique file name could be created by merging
             # the two source segment ids. These ids refer to the source
-            # database and serve the purpose of providing unique identifiers 
+            # database and serve the purpose of providing unique identifiers
             # for all waveforms:
             filename = "%d-%d.mseed" % (metadata1._segment_db_id,
                                         metadata2._segment_db_id)

@@ -516,18 +516,10 @@ def main(segment, config):
 
     # write URLs in CSV format (first column will be segment id, then URL, then class):
     nslc = seg_seed_id.split('.')
-    url = segment.datacenter.dataselect_url
-    url += '?net=%s' % nslc[0]
-    url += '&sta=%s' % nslc[1]
-    url += '&loc=%s' % nslc[2]
-    url += '&cha=%s' % nslc[3]
-    url += '&starttime=%s' % segment.request_start.isoformat(sep='T')
-    url += '&endtime=%s' % segment.request_end.isoformat(sep='T')
-
     evt = segment.event
 
     return {
-        'url': url,
+        'url': segment.datacenter.dataselect_url,
         'classlabel': class_label,
         'mag': evt.magnitude,
         'magtype': evt.mag_type,
@@ -536,6 +528,12 @@ def main(segment, config):
         'depth_km': evt.depth_km,
         'time': evt.time.isoformat(sep='T'),
         'dist_deg': segment.event_distance_deg,
+        'net': nslc[0],
+        'sta': nslc[1],
+        'loc': nslc[2],
+        'cha': nslc[3],
+        'starttime': segment.request_start.isoformat(sep='T'),
+        'endtime': segment.request_end.isoformat(sep='T'),
     }
 
 
