@@ -120,12 +120,12 @@ for channel_data in get_events(cache_dir, classlabel=classlabel):
 
         # Now you can start compose them
         # define how many artificial multi event traces you want:
-        NUM_MULTIEVENT = 3
+        NUM_MULTIEVENT_TRACES = 3
         # take the trace with more points:
         maxtrace, mintrace = (trace1, trace2) if len(trace1) >= len(trace2) \
             else (trace2, trace1)
         # take NUM_MULTIEVENT random point indices from max_trace:
-        pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT, p=None)
+        pts = np.random.choice(len(maxtrace), NUM_MULTIEVENT_TRACES, p=None)
         # p above is a probability distribution with length=len(max_t).
         # None means: use linear distribution. Change as you like
         # (see numpy doc in case)
