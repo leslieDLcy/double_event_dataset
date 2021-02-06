@@ -74,7 +74,7 @@ def class_labels():
     return get_input_dataframe().classlabel.cat.categories.to_list()
 
 
-def get_events(root_dir=None, classlabel=None, verbose=False):
+def get_channel_data(root_dir=None, classlabel=None, verbose=False):
     """Yield data objects of this dataset, grouped by channels.
     Each yielded data object is a collection of all waveforms recorded at a
     specific seismic channel.

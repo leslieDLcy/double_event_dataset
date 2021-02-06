@@ -23,7 +23,7 @@ Here a snippet of the functions to use in your code
 ```python
 import numpy as np
 from obspy import Trace
-from double_event_dataset.utils import get_events, class_labels
+from double_event_dataset.utils import get_channel_data, class_labels
 
 # Setup a cache directory. Use this if you want all waveforms to be
 # saved also on your computer and/or make the `get_events` method
@@ -36,7 +36,7 @@ classlabel = 'urb_single'
 # To have  alist of all class labels, type:
 classlabels = class_labels()  # = ['urb_multi', 'urb_nc', 'urb_single']
 
-for channel_data in get_events(cache_dir, classlabel=classlabel):
+for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
     # This is your channel_data object, a collection
     # of recorded Waveforms from given channel, and
     # annotated with a class label.
