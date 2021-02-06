@@ -12,13 +12,12 @@ python createurls.py
 
 ## Usage
 
-Tha data size (skipping the generation of all artificial double events)
-is in the order of Gigabytes. Therefore, data must be downloaded and
-processed inplace. This program stores the URL of labelled waveforms and let
-the user manipulate them.
-
-Here a snippet of the functions to use in your code
-(your Python project, IPython in the terminal, Notebook and so on)
+Tha data size is in the order of Gigabytes (not even considering the 
+generation of all artificial double events). Therefore, data must be downloaded 
+and processed inplace. This program stores internally only the URL of labelled 
+waveforms and let the user download and manipulate them on the local computer,
+providing few utility functions (see snippet below), that you can use in
+your code (e.g., Python project, IPython in the terminal, Notebook)
 
 ```python
 import numpy as np
