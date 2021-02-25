@@ -64,13 +64,8 @@ def _load_input_dataframe():
     loc_col = pd.read_csv(file, usecols=['loc'], keep_default_na=False, dtype=str)['loc']
     # and set it to the dataframe
     dfr['loc'] = loc_col
-    # still, the loc column might have nans (see below)
-
     # for safety:
     dfr.loc[pd.isna(dfr['loc']), 'loc'] = ''
-    # We could have preserved empty string sin 'loc' column by passingw
-    # keep_default_na=False in read_csv, but this affects also numeric columns,
-    # where we do want empty cells to be parsed as NaN
 
     for col in ('starttime', 'endtime', 'time'):
         assert not pd.isna(dfr[col]).any()  # just a check
