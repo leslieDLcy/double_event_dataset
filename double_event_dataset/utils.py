@@ -60,7 +60,7 @@ def _load_input_dataframe():
     # but this affects all cols.
     # There is apparently only one cumbersome solution: load loc
     # col again, as str:
-    loc_col = pd.read_csv(file, usecols=['loc'], dtype=str)['b']
+    loc_col = pd.read_csv(file, usecols=['loc'], dtype=str)['loc']
     # and set it to the dataframe
     df['loc'] = loc_col
     # still, the loc column might have nans (see below)
