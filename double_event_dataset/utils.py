@@ -53,13 +53,13 @@ def _load_input_dataframe():
     file = URLS_PATH
     dfr = pd.read_csv(file)
     
-    # problem. loc is interpreted as float.
-    # This has two problems:
-    # 1: '01' and similar converted to 1.0
+    # Problem: the "loc" column is interpreted as float.
+    # which causes the following outcomes:
+    # 1: '01' is converted to 1.0 (same problem for '00', '02' and so on)
     # 2: empty strings converted to nan
     # To solve 1., we can pass dtype=str to read_csv,
     # To solve 2., we can pass keep_default_na=False to read_csv
-    # However, both solutions affect all columns, so we
+    # However, both solutions affect all columns, so
     # we need to reload the "loc" column only from the csv:
     loc_col = pd.read_csv(file, usecols=['loc'], keep_default_na=False, dtype=str)['loc']
     # and set it to the dataframe
