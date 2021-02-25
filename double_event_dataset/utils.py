@@ -54,18 +54,19 @@ def _load_input_dataframe():
     dfr = pd.read_csv(file)
     
     # problem. loc is interpreted as float.
-    # This has two problems: '01' and similar converted to 1.0
-    # empty strings converted to nan
-    # To solve the first problem, we can pass dtype=str to read_csv,
-    # but this affects all cols.
-    # There is apparently only one cumbersome solution: load loc
-    # col again, as str:
-    loc_col = pd.read_csv(file, usecols=['loc'], dtype=str)['loc']
+    # This has two problems:
+    # 1: '01' and similar converted to 1.0
+    # 2: empty strings converted to nan
+    # To solve 1., we can pass dtype=str to read_csv,
+    # To solve 2., we can pass keep_default_na=False to read_csv
+    # However, both solutions affect all columns, so we
+    # we need to reload the "loc" column only from the csv:
+    loc_col = pd.read_csv(file, usecols=['loc'], keep_default_na=False, dtype=str)['loc']
     # and set it to the dataframe
-    df['loc'] = loc_col
+    dfr['loc'] = loc_col
     # still, the loc column might have nans (see below)
 
-    # convert NaNs in loc to empty string:
+    # for safety:
     dfr.loc[pd.isna(dfr['loc']), 'loc'] = ''
     # We could have preserved empty string sin 'loc' column by passingw
     # keep_default_na=False in read_csv, but this affects also numeric columns,
