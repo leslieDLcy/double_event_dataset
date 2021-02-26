@@ -28,7 +28,7 @@ from double_event_dataset.utils import get_channel_data, class_labels
 # saved also on your computer and/or make the `get_events` method
 # below run faster next time (providing the same cache dir will load from
 # disk instead than from the web)
-# cache_dir = None  # None: no cache (always download waveforms)
+cache_dir = None  # None: no cache (always download waveforms)
 # Provide a class label to work only on specific waveforms.
 # None means: all labels.
 classlabel = 'urb_single'
