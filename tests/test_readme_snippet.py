@@ -1,25 +1,16 @@
-# double_event_dataset
+from os.path import dirname, join
 
-## Required Python packages:
-```
-numpy>=1.19.5
-obspy>=1.2.2
-pandas>=1.2.1
-```
-<!-- internal usage:
-python createurls.py
--->
+cache_dir = join(dirname(__file__), 'tmp', 'downloaded')
 
-## Usage
+###########################################################################
+# README: this snippet is a simple test intended to be run in debug mode
+# within an IDE. Just put a breakpoint at the end on the `breakpoint` variable
+# and assure you get there with no exceptions
+# After that, update the README by copying the text below after (and not including
+# the last breakpoint variable) and UNCOMMENT cache_dir = None (see below)
+# ###########################################################################
 
-Tha data size is in the order of Gigabytes (not even considering the 
-generation of all artificial double events). Therefore, data must be downloaded 
-and processed inplace. This program stores internally only the URL of labelled 
-waveforms and let the user download and manipulate them by means of the code
-snippet below, that can be copied and modified in any custom code (e.g., Python 
-project, IPython, Notebook)
 
-```python
 import numpy as np
 from obspy import Trace
 from double_event_dataset.utils import get_channel_data, class_labels
@@ -164,4 +155,6 @@ for channel_data in get_channel_data(cache_dir, classlabel=classlabel):
                                         metadata2._segment_db_id)
             # and then save it wherever you want ...
 
-```
+        breakpoint = None
+
+    breakpoint2 = None

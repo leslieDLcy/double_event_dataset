@@ -8,7 +8,7 @@ from os.path import join, isdir, isfile, basename, dirname
 from os import makedirs
 
 import pandas as pd
-from obspy import read
+from obspy import read, read_inventory as _read_inventory
 
 
 _dataframe = None  # singleton for the input dataframe
@@ -106,48 +106,75 @@ def get_channel_data(root_dir=None, classlabel=None, verbose=False):
     elif isinstance(classlabel, (list, tuple)):
         dfr = dfr[dfr.classlabel.isin(classlabel)].copy()
 
-    for [net, sta, loc, cha], _df in dfr.groupby(['net','sta', 'loc', 'cha']):
-        channel_id_str = '%s.%s.%s.%s' % (net, sta, loc, cha)
-        data = []
-        for index_, series in _df.iterrows():
-            file_url = series['url'] + "?net=" + net + "&sta=" + sta + \
-                        "&loc=" + loc + "&cha=" + cha + \
-                        "&starttime=" + series['starttime'].isoformat('T') + \
-                        "&endtime=" + series['endtime'].isoformat('T')
-            file_path = None
-            if root_dir:
-                filename = "mag=%s_lat=%s_lon=%s_depth=%s_time=%s" % \
-                           (str(series['mag']), str(series['lat']),
-                            str(series['lon']), str(series['depth_km']),
-                            series['time'].isoformat('T'))
-                file_path = join(root_dir, channel_id_str, filename + '.mseed')
+    for [net, sta], sta_df in dfr.groupby(['net', 'sta']):
+        inv = None
+        inv_path = None
+        if root_dir:
+            inv_path = join(root_dir, 'station_inventories',
+                            '%s.%s.xml' % (net, sta))
 
-            stream = read_stream(file_path)
-            if stream is None:
-                stream = read_stream(file_url)
-                if stream is not None and file_path:
-                    if not isdir(dirname(file_path)):
-                        makedirs(dirname(file_path))
-                    try:
-                        stream.write(file_path, format='MSEED')
-                    except:
-                        if verbose:
-                            print('Could not write to file: %s' % file_path)
-            if stream is None:
-                if verbose:
-                    print('Channel %s: discarding waveform (could not read as '
-                          'miniSEED). URL: %s' %
-                          (channel_id_str, file_url))
-                continue
-            if len(stream) != 1:
-                if verbose:
-                    print('Channel %s: discarding waveform (several traces '
-                          'found, maybe gaps/overlaps?). URL: %s' %
-                          (channel_id_str, file_url))
-                continue
-            trace = stream[0]
-            data.append((trace, series))
-        yield ChannelTracesCollection(net, sta, loc, cha, data)
+            if isfile(inv_path):
+                inv = read_inventory(inv_path)
+
+        if inv is None:  # try from URL
+            sta_url = sta_df.at[sta_df.index[0], 'url']
+            sta_url = sta_url.replace('dataselect', 'station')
+            sta_url += "?net=" + net + "&sta=" + sta + "&level=response"
+            inv = read_inventory(sta_url)
+            if inv is None:
+                print('Could not read inventory, discarding all related '
+                      'waveforms. URL: %s' % sta_url)
+
+        if inv is None:
+            continue
+
+        if inv_path and not isfile(inv_path):
+            if not isdir(dirname(inv_path)):
+                makedirs(dirname(inv_path))
+            inv.write(inv_path, format='STATIONXML')
+
+        for [loc, cha], cha_df in sta_df.groupby(['loc', 'cha']):
+            channel_id_str = '%s.%s.%s.%s' % (net, sta, loc, cha)
+            data = []
+            for index_, series in cha_df.iterrows():
+                file_url = series['url'] + "?net=" + net + "&sta=" + sta + \
+                            "&loc=" + loc + "&cha=" + cha + \
+                            "&starttime=" + series['starttime'].isoformat('T') + \
+                            "&endtime=" + series['endtime'].isoformat('T')
+                file_path = None
+                if root_dir:
+                    filename = "mag=%s_lat=%s_lon=%s_depth=%s_time=%s" % \
+                               (str(series['mag']), str(series['lat']),
+                                str(series['lon']), str(series['depth_km']),
+                                series['time'].isoformat('T'))
+                    file_path = join(root_dir, channel_id_str, filename + '.mseed')
+
+                stream = read_stream(file_path)
+                if stream is None:
+                    stream = read_stream(file_url)
+                    if stream is not None and file_path:
+                        if not isdir(dirname(file_path)):
+                            makedirs(dirname(file_path))
+                        try:
+                            stream.write(file_path, format='MSEED')
+                        except:
+                            if verbose:
+                                print('Could not write to file: %s' % file_path)
+                if stream is None:
+                    if verbose:
+                        print('Channel %s: discarding waveform (could not read as '
+                              'miniSEED). URL: %s' %
+                              (channel_id_str, file_url))
+                    continue
+                if len(stream) != 1:
+                    if verbose:
+                        print('Channel %s: discarding waveform (several traces '
+                              'found, maybe gaps/overlaps?). URL: %s' %
+                              (channel_id_str, file_url))
+                    continue
+                trace = stream[0]
+                data.append((trace, series))
+            yield ChannelTracesCollection(net, sta, loc, cha, data, inv)
 
 
 def read_stream(file_or_url, raise_on_err=False):
@@ -167,14 +194,29 @@ def read_stream(file_or_url, raise_on_err=False):
         return None
 
 
+def read_inventory(file_or_url, raise_on_err=False):
+    if not file_or_url:
+        if raise_on_err:
+            raise ValueError('Can not read Inventory: %s invalid path' %
+                             file_or_url)
+        return None
+    try:
+        return _read_inventory(file_or_url, format='STATIONXML')
+    except:  # noqa
+        if raise_on_err:
+            raise
+        return None
+
+
 class ChannelTracesCollection:
     """Container for a channel and its recorded waveforms"""
-    def __init__(self, net, sta, loc, cha, data):
+    def __init__(self, net, sta, loc, cha, data, inventory):
         self.data = data
         self.cha = cha
         self.net = net
         self.sta = sta
         self.loc = loc
+        self.inventory = inventory
 
     @property
     def numtraces(self):
